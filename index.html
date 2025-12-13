@@ -35,6 +35,8 @@ const firebaseConfig = {
     measurementId: "G-6W2134PN4C"
 };
 firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const leaderboardRef = db.ref('leaderboard');
 </script>
 </head>
 <body>
@@ -75,8 +77,8 @@ firebase.initializeApp(firebaseConfig);
 <button onclick="showStart()">Back to Menu</button>
 </div>
 
-<!-- Quiz logic -->
 <script>
+// Quiz logic
 let poeCount = 0;
 let d4Count = 0;
 let currentQuestion = 1;
@@ -96,65 +98,92 @@ const poeTexts = ["Path of Exile 2 💀","PoE2 💀","PoE2 💀","PoE2 💀","Po
 const d4Texts = ["Diablo 4 🔥","Diablo 4 🔥","Diablo 4 🔥","Diablo 4 🔥","Diablo 4 🔥","Diablo 4 🔥","Diablo 4 🔥"];
 
 function initButtons(){
-document.getElementById('poeBtn').onclick = () => choose('poe');
-document.getElementById('d4Btn').onclick = () => choose('d4');
+  document.getElementById('poeBtn').onclick = () => choose('poe');
+  document.getElementById('d4Btn').onclick = () => choose('d4');
 }
 
 function startQuiz(){
-playerName = document.getElementById('playerName').value.trim() || 'Anonymous';
-poeCount = d4Count = 0;
-currentQuestion = 1;
-showScreen('quizScreen');
-nextQuestion();
+  playerName = document.getElementById('playerName').value.trim() || 'Anonymous';
+  poeCount = d4Count = 0;
+  currentQuestion = 1;
+  showScreen('quizScreen');
+  nextQuestion();
 }
 
 function nextQuestion(){
-document.getElementById('question').innerHTML = questions[currentQuestion-1];
-document.getElementById('poeBtn').innerHTML = poeTexts[currentQuestion-1];
-document.getElementById('d4Btn').innerHTML = d4Texts[currentQuestion-1];
-document.getElementById('currentQ').innerHTML = currentQuestion;
+  document.getElementById('question').innerHTML = questions[currentQuestion-1];
+  document.getElementById('poeBtn').innerHTML = poeTexts[currentQuestion-1];
+  document.getElementById('d4Btn').innerHTML = d4Texts[currentQuestion-1];
+  document.getElementById('currentQ').innerHTML = currentQuestion;
 }
 
 function choose(choice){
-if(choice==='poe') poeCount++; else d4Count++;
-currentQuestion++;
-if(currentQuestion<=7) nextQuestion(); else showResult();
+  if(choice==='poe') poeCount++; else d4Count++;
+  currentQuestion++;
+  if(currentQuestion<=7) nextQuestion(); else showResult();
 }
 
 function showResult(){
-showScreen('resultScreen');
-let score = Math.max(poeCount,d4Count);
-let resultHtml='';
+  showScreen('resultScreen');
+  let score = Math.max(poeCount,d4Count);
+  let resultHtml='';
 
-if(poeCount>=4){
-resultHtml=`<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
-}else if(d4Count>=4){
-resultHtml=`<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
-}else{
-resultHtml=`<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
+  if(poeCount>=4){
+    resultHtml=`<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
+  }else if(d4Count>=4){
+    resultHtml=`<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
+  }else{
+    resultHtml=`<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
+  }
+  resultHtml+=`<p>Your max streak: ${score}/7 🏆</p>`;
+  document.getElementById('result').innerHTML=resultHtml;
+
+  // zapis do Firebase
+  leaderboardRef.push({
+    name: playerName,
+    score: Number(score),
+    date: new Date().toLocaleDateString()
+  });
 }
-resultHtml+=`<p>Your max streak: ${score}/7 🏆</p>`;
-document.getElementById('result').innerHTML=resultHtml;
 
-// Wywołanie funkcji z leaderboard.js
-addPlayerScore(playerName, score);
+function showLeaderboard(){
+  document.getElementById('leaderboard').innerHTML='Loading leaderboard...';
+
+  leaderboardRef.on('value', snapshot => {
+    const entries = [];
+    snapshot.forEach(child => entries.push(child.val()));
+    // sort malejąco
+    entries.sort((a,b) => b.score - a.score);
+
+    let html = '<div id="leaderboardList">';
+    if(entries.length === 0){
+      html+='<p>No scores yet! Be the first! 🏆</p>';
+    } else {
+      entries.forEach((entry,i) => {
+        html+=`<div class="leaderboard-entry">
+                 <span>#${i+1} ${entry.name}</span>
+                 <span>${entry.score}/7 (${entry.date})</span>
+               </div>`;
+      });
+    }
+    html+='</div>';
+    document.getElementById('leaderboard').innerHTML=html;
+  });
+
+  showScreen('leaderboardScreen');
 }
 
 function showScreen(id){
-document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
 function showStart(){
-document.getElementById('playerName').value='';
-showScreen('startScreen');
+  document.getElementById('playerName').value='';
+  showScreen('startScreen');
 }
 
 initButtons();
 </script>
-
-<!-- Tutaj podłączamy leaderboard.js -->
-<script src="leaderboard.js"></script>
-
 </body>
 </html>
