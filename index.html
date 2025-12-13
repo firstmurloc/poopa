@@ -19,42 +19,10 @@ button:hover { background: #FFA500; transform: scale(1.05); }
 .screen.active { display: block; }
 #progress { font-size: 1.2em; margin: 20px 0; }
 </style>
+
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-</head>
-<body>
-<div id="startScreen" class="screen active">
-<h1>🔥 ARPG QUIZ: PoE2 vs D4 Battle 🔥</h1>
-<p>Enter your nickname and fight for the top spots!</p>
-<input type="text" id="playerName" placeholder="Your nickname..." maxlength="20">
-<br>
-<button onclick="startQuiz()">START QUIZ 💀🔥</button>
-<br><br>
-<button onclick="showLeaderboard()">View Leaderboard 🏆</button>
-</div>
-
-<div id="quizScreen" class="screen">
-<h1>🔥 ARPG QUIZ: The Battle 🔥</h1>
-<div id="progress">Question <span id="currentQ">1</span>/7</div>
-<p class="question" id="question"></p>
-<div id="buttons">
-<button id="poeBtn">Path of Exile 2 💀</button>
-<button id="d4Btn">Diablo 4 🔥</button>
-</div>
-</div>
-
-<div id="resultScreen" class="screen">
-<div id="result"></div>
-<button onclick="showStart()">Play Again</button>
-<button onclick="showLeaderboard()">Leaderboard 🏆</button>
-</div>
-
-<div id="leaderboardScreen" class="screen">
-<h1>🏆 GLOBAL TOP PLAYERS 🏆</h1>
-<div id="leaderboard">Loading...</div>
-<button onclick="showStart()">Back to Menu</button>
-</div>
-
 <script>
 const firebaseConfig = {
     apiKey: "AIzaSyDgIx_FrwwP_rcxpJUyUgJbqqo5i0aCYc",
@@ -66,11 +34,49 @@ const firebaseConfig = {
     appId: "1:411396684974:web:f65a3e9cba7aea6ae4413f",
     measurementId: "G-6W2134PN4C"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const leaderboardRef = db.ref('leaderboard');
+</script>
+</head>
+<body>
 
+<!-- Start Screen -->
+<div id="startScreen" class="screen active">
+<h1>🔥 ARPG QUIZ: PoE2 vs D4 Battle 🔥</h1>
+<p>Enter your nickname and fight for the top spots!</p>
+<input type="text" id="playerName" placeholder="Your nickname..." maxlength="20">
+<br>
+<button onclick="startQuiz()">START QUIZ 💀🔥</button>
+<br><br>
+<button onclick="showLeaderboard()">View Leaderboard 🏆</button>
+</div>
+
+<!-- Quiz Screen -->
+<div id="quizScreen" class="screen">
+<h1>🔥 ARPG QUIZ: The Battle 🔥</h1>
+<div id="progress">Question <span id="currentQ">1</span>/7</div>
+<p class="question" id="question"></p>
+<div id="buttons">
+<button id="poeBtn">Path of Exile 2 💀</button>
+<button id="d4Btn">Diablo 4 🔥</button>
+</div>
+</div>
+
+<!-- Result Screen -->
+<div id="resultScreen" class="screen">
+<div id="result"></div>
+<button onclick="showStart()">Play Again</button>
+<button onclick="showLeaderboard()">Leaderboard 🏆</button>
+</div>
+
+<!-- Leaderboard Screen -->
+<div id="leaderboardScreen" class="screen">
+<h1>🏆 GLOBAL TOP PLAYERS 🏆</h1>
+<div id="leaderboard">Loading...</div>
+<button onclick="showStart()">Back to Menu</button>
+</div>
+
+<!-- Quiz logic -->
+<script>
 let poeCount = 0;
 let d4Count = 0;
 let currentQuestion = 1;
@@ -130,30 +136,8 @@ resultHtml=`<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings:
 resultHtml+=`<p>Your max streak: ${score}/7 🏆</p>`;
 document.getElementById('result').innerHTML=resultHtml;
 
-// push() dopisuje wynik
-leaderboardRef.push({name:playerName, score:score, date:new Date().toLocaleDateString()});
-}
-
-function showLeaderboard(){
-document.getElementById('leaderboard').innerHTML='Loading global leaderboard...';
-
-// dynamiczne odświeżanie
-leaderboardRef.orderByChild('score').limitToLast(10).on('value', snapshot=>{
-let html='<div id="leaderboardList">';
-if(!snapshot.exists()){ html+='<p>No scores yet! Be the first! 🏆</p>'; }
-else{
-const entries=[];
-snapshot.forEach(child=>entries.push(child.val()));
-entries.reverse();
-entries.forEach((entry,i)=>{
-html+=`<div class="leaderboard-entry"><span>#${i+1} ${entry.name}</span><span>${entry.score}/7 (${entry.date})</span></div>`;
-});
-}
-html+='</div>';
-document.getElementById('leaderboard').innerHTML=html;
-});
-
-showScreen('leaderboardScreen');
+// Wywołanie funkcji z leaderboard.js
+addPlayerScore(playerName, score);
 }
 
 function showScreen(id){
@@ -168,5 +152,9 @@ showScreen('startScreen');
 
 initButtons();
 </script>
+
+<!-- Tutaj podłączamy leaderboard.js -->
+<script src="leaderboard.js"></script>
+
 </body>
 </html>
