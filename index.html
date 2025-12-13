@@ -1,176 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARPG Quiz: PoE2 vs Diablo 4</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(to right, #228B22, #8B0000); color: white; text-align: center; padding: 20px; margin: 0; }
-        h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-        input[type="text"] { padding: 15px; font-size: 1.2em; border: none; border-radius: 10px; width: 300px; margin: 10px; }
-        button { background: #FFD700; color: black; border: none; padding: 15px 30px; margin: 10px; font-size: 1.2em; border-radius: 10px; cursor: pointer; transition: all 0.3s; }
-        button:hover { background: #FFA500; transform: scale(1.05); }
-        #result { font-size: 3em; margin-top: 50px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); }
-        .question { font-size: 1.5em; margin: 30px 0; }
-        #buttons { margin: 40px 0; }
-        #leaderboard { background: rgba(0,0,0,0.5); border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 500px; font-size: 1.2em; }
-        .leaderboard-entry { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ccc; }
-        .screen { display: none; }
-        .screen.active { display: block; }
-        #progress { font-size: 1.2em; margin: 20px 0; }
-    </style>
-    <!-- Firebase SDK dla Realtime Database -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARPG Quiz: PoE2 vs Diablo 4</title>
+<style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(to right, #228B22, #8B0000); color: white; text-align: center; padding: 20px; margin: 0; }
+    h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+    input[type="text"] { padding: 15px; font-size: 1.2em; border: none; border-radius: 10px; width: 300px; margin: 10px; }
+    button { background: #FFD700; color: black; border: none; padding: 15px 30px; margin: 10px; font-size: 1.2em; border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+    button:hover { background: #FFA500; transform: scale(1.05); }
+    #result { font-size: 3em; margin-top: 50px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); }
+    .question { font-size: 1.5em; margin: 30px 0; }
+    #buttons { margin: 40px 0; }
+    #leaderboard { background: rgba(0,0,0,0.5); border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 500px; font-size: 1.2em; }
+    .leaderboard-entry { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ccc; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    #progress { font-size: 1.2em; margin: 20px 0; }
+</style>
+<!-- Firebase SDK dla Realtime Database -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div id="startScreen" class="screen active">
-        <h1>🔥 ARPG QUIZ: PoE2 vs D4 Battle 🔥</h1>
-        <p>Enter your nickname and fight for the top spots!</p>
-        <input type="text" id="playerName" placeholder="Your nickname..." maxlength="20">
-        <br>
-        <button onclick="startQuiz()">START QUIZ 💀🔥</button>
-        <br><br>
-        <button onclick="showLeaderboard()">View Leaderboard 🏆</button>
+<div id="startScreen" class="screen active">
+    <h1>🔥 ARPG QUIZ: PoE2 vs D4 Battle 🔥</h1>
+    <p>Enter your nickname and fight for the top spots!</p>
+    <input type="text" id="playerName" placeholder="Your nickname..." maxlength="20">
+    <br>
+    <button onclick="startQuiz()">START QUIZ 💀🔥</button>
+    <br><br>
+    <button onclick="showLeaderboard()">View Leaderboard 🏆</button>
+</div>
+
+<div id="quizScreen" class="screen">
+    <h1>🔥 ARPG QUIZ: The Battle 🔥</h1>
+    <div id="progress">Question <span id="currentQ">1</span>/7</div>
+    <p class="question" id="question"></p>
+    <div id="buttons">
+        <button id="poeBtn">Path of Exile 2 💀</button>
+        <button id="d4Btn">Diablo 4 🔥</button>
     </div>
+</div>
 
-    <div id="quizScreen" class="screen">
-        <h1>🔥 ARPG QUIZ: The Battle 🔥</h1>
-        <div id="progress">Question <span id="currentQ">1</span>/7</div>
-        <p class="question" id="question"></p>
-        <div id="buttons">
-            <button id="poeBtn">Path of Exile 2 💀</button>
-            <button id="d4Btn">Diablo 4 🔥</button>
-        </div>
-    </div>
+<div id="resultScreen" class="screen">
+    <div id="result"></div>
+    <button onclick="showStart()">Play Again</button>
+    <button onclick="showLeaderboard()">Leaderboard 🏆</button>
+</div>
 
-    <div id="resultScreen" class="screen">
-        <div id="result"></div>
-        <button onclick="showStart()">Play Again</button>
-        <button onclick="showLeaderboard()">Leaderboard 🏆</button>
-    </div>
+<div id="leaderboardScreen" class="screen">
+    <h1>🏆 GLOBAL TOP PLAYERS 🏆</h1>
+    <div id="leaderboard">Loading...</div>
+    <button onclick="showStart()">Back to Menu</button>
+</div>
 
-    <div id="leaderboardScreen" class="screen">
-        <h1>🏆 GLOBAL TOP PLAYERS 🏆</h1>
-        <div id="leaderboard">Loading...</div>
-        <button onclick="showStart()">Back to Menu</button>
-    </div>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDgIx_FrwwP_rcxpJUyUgJbqqo5i0aCYc",
+    authDomain: "poopa-f9cd1.firebaseapp.com",
+    databaseURL: "https://poopa-f9cd1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "poopa-f9cd1",
+    storageBucket: "poopa-f9cd1.appspot.com",
+    messagingSenderId: "411396684974",
+    appId: "1:411396684974:web:f65a3e9cba7aea6ae4413f",
+    measurementId: "G-6W2134PN4C"
+};
 
-    <script>
-        const firebaseConfig = {
-  apiKey: "AIzaSyDgIx_FrwwP_rcxpJUyUgJbqqo5i0aCYc",
-  authDomain: "poopa-f9cd1.firebaseapp.com",
-  databaseURL: "https://poopa-f9cd1-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "poopa-f9cd1",
-  storageBucket: "poopa-f9cd1.appspot.com",
-  messagingSenderId: "411396684974",
-  appId: "1:411396684974:web:f65a3e9cba7aea6ae4413f",
-  measurementId: "G-6W2134PN4C"
-        };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const leaderboardRef = db.ref('leaderboard');
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const leaderboardRef = db.ref('leaderboard');
+let poeCount = 0;
+let d4Count = 0;
+let currentQuestion = 1;
+let playerName = '';
 
-        let poeCount = 0;
-        let d4Count = 0;
-        let currentQuestion = 1;
-        let playerName = '';
+const questions = [
+    "Question 1/7: Which game has better class balance?",
+    "Question 2/7: Which game is more grindy and frustrating?",
+    "Question 3/7: Which game deserves the title 'bad' in 2025?",
+    "Question 4/7: Which has the better endgame?",
+    "Question 5/7: Which is more pay-to-win?",
+    "Question 6/7: Which has uglier character models?",
+    "Question 7/7: Which game earned the biggest memes in the community?"
+];
 
-        const questions = [
-            "Question 1/7: Which game has better class balance?",
-            "Question 2/7: Which game is more grindy and frustrating?",
-            "Question 3/7: Which game deserves the title 'bad' in 2025?",
-            "Question 4/7: Which has the better endgame?",
-            "Question 5/7: Which is more pay-to-win?",
-            "Question 6/7: Which has uglier character models?",
-            "Question 7/7: Which game earned the biggest memes in the community?"
-        ];
+const poeTexts = ["Path of Exile 2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀"];
+const d4Texts = ["Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥"];
 
-        const poeTexts = ["Path of Exile 2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀", "PoE2 💀"];
-        const d4Texts = ["Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥", "Diablo 4 🔥"];
+function initButtons() {
+    document.getElementById('poeBtn').onclick = () => choose('poe');
+    document.getElementById('d4Btn').onclick = () => choose('d4');
+}
 
-        function initButtons() {
-            document.getElementById('poeBtn').onclick = () => choose('poe');
-            document.getElementById('d4Btn').onclick = () => choose('d4');
-        }
+function startQuiz() {
+    playerName = document.getElementById('playerName').value.trim() || 'Anonymous';
+    poeCount = d4Count = 0;
+    currentQuestion = 1;
+    showScreen('quizScreen');
+    nextQuestion();
+}
 
-        function startQuiz() {
-            playerName = document.getElementById('playerName').value.trim() || 'Anonymous';
-            poeCount = d4Count = 0;
-            currentQuestion = 1;
-            showScreen('quizScreen');
-            nextQuestion();
-        }
+function nextQuestion() {
+    document.getElementById('question').innerHTML = questions[currentQuestion - 1];
+    document.getElementById('poeBtn').innerHTML = poeTexts[currentQuestion - 1];
+    document.getElementById('d4Btn').innerHTML = d4Texts[currentQuestion - 1];
+    document.getElementById('currentQ').innerHTML = currentQuestion;
+}
 
-        function nextQuestion() {
-            document.getElementById('question').innerHTML = questions[currentQuestion - 1];
-            document.getElementById('poeBtn').innerHTML = poeTexts[currentQuestion - 1];
-            document.getElementById('d4Btn').innerHTML = d4Texts[currentQuestion - 1];
-            document.getElementById('currentQ').innerHTML = currentQuestion;
-        }
+function choose(choice) {
+    if (choice === 'poe') poeCount++; else d4Count++;
+    currentQuestion++;
+    if (currentQuestion <= 7) nextQuestion();
+    else showResult();
+}
 
-        function choose(choice) {
-            if (choice === 'poe') poeCount++; else d4Count++;
-            currentQuestion++;
-            if (currentQuestion <= 7) nextQuestion();
-            else showResult();
-        }
+function showResult() {
+    showScreen('resultScreen');
+    let score = Math.max(poeCount, d4Count);
+    let resultHtml = '';
 
-        function showResult() {
-            showScreen('resultScreen');
-            let score = Math.max(poeCount, d4Count);
-            let resultHtml = '';
+    if (poeCount >= 4) {
+        resultHtml = `<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
+    } else if (d4Count >= 4) {
+        resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
+    } else {
+        resultHtml = `<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
+    }
+    resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
+    document.getElementById('result').innerHTML = resultHtml;
 
-            if (poeCount >= 4) {
-                resultHtml = `<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
-            } else if (d4Count >= 4) {
-                resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
-            } else {
-                resultHtml = `<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
-            }
-            resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
-            document.getElementById('result').innerHTML = resultHtml;
+    // Zapis wyniku – push() dopisuje nowy wpis, nie nadpisuje
+    leaderboardRef.push({
+        name: playerName,
+        score: score,
+        date: new Date().toLocaleDateString()
+    });
+}
 
-            // Zapisz globalnie
-            leaderboardRef.push({
-                name: playerName,
-                score: score,
-                date: new Date().toLocaleDateString()
+function showLeaderboard() {
+    document.getElementById('leaderboard').innerHTML = 'Loading global leaderboard...';
+
+    // Dynamiczne odświeżanie leaderboardu
+    leaderboardRef.orderByChild('score').limitToLast(10).on('value', snapshot => {
+        let html = '<div id="leaderboardList">';
+        if (!snapshot.exists()) {
+            html += '<p>No scores yet! Be the first! 🏆</p>';
+        } else {
+            const entries = [];
+            snapshot.forEach(child => entries.push(child.val()));
+            entries.reverse(); // od najwyższego do najniższego
+            entries.forEach((entry, i) => {
+                html += `<div class="leaderboard-entry"><span>#${i+1} ${entry.name}</span><span>${entry.score}/7 (${entry.date})</span></div>`;
             });
         }
+        html += '</div>';
+        document.getElementById('leaderboard').innerHTML = html;
+    });
 
-        function showLeaderboard() {
-            document.getElementById('leaderboard').innerHTML = 'Loading global leaderboard...';
-            leaderboardRef.orderByChild('score').limitToLast(10).once('value', snapshot => {
-                let html = '<div id="leaderboardList">';
-                if (snapshot.numChildren() === 0) {
-                    html += '<p>No scores yet! Be the first! 🏆</p>';
-                } else {
-                    const entries = [];
-                    snapshot.forEach(child => entries.push(child.val()));
-                    entries.reverse(); // bo limitToLast daje od najniższego
-                    entries.forEach((entry, i) => {
-                        html += `<div class="leaderboard-entry"><span>#${i+1} ${entry.name}</span><span>${entry.score}/7 (${entry.date})</span></div>`;
-                    });
-                }
-                html += '</div>';
-                document.getElementById('leaderboard').innerHTML = html;
-            });
-            showScreen('leaderboardScreen');
-        }
+    showScreen('leaderboardScreen');
+}
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
 
-        function showStart() {
-            document.getElementById('playerName').value = '';
-            showScreen('startScreen');
-        }
+function showStart() {
+    document.getElementById('playerName').value = '';
+    showScreen('startScreen');
+}
 
-        initButtons();
-    </script>
+initButtons();
+</script>
 </body>
 </html>
