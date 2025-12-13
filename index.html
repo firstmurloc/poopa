@@ -145,10 +145,10 @@
 
         function showLeaderboard(){
             document.getElementById('leaderboard').innerHTML='Loading global leaderboard...';
-            leaderboardRef.orderByChild('score').limitToLast(10).once('value', snapshot => {
+            leaderboardRef.orderByChild('score').limitToLast(10).once('value').then(snapshot => {
                 const entries = [];
                 snapshot.forEach(child => entries.push(child.val()));
-                entries.reverse(); // Od najwyższego
+                entries.reverse(); // Od najwyższego score
                 let html = '<div id="leaderboardList">';
                 if(entries.length === 0){
                     html += '<p>No scores yet! Be the first! 🏆</p>';
@@ -160,7 +160,7 @@
                 html += '</div>';
                 document.getElementById('leaderboard').innerHTML = html;
             }).catch(error => {
-                document.getElementById('leaderboard').innerHTML = 'Error loading leaderboard: ' + error.message;
+                document.getElementById('leaderboard').innerHTML = 'Error: ' + error.message;
             });
             showScreen('leaderboardScreen');
         }
