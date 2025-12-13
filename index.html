@@ -61,7 +61,6 @@
     </div>
 
     <script>
-        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyDgIx_FrwwP_rcxpJUyUgJbqqo5i0aCYc",
             authDomain: "poopa-f9cd1.firebaseapp.com",
@@ -76,7 +75,6 @@
         const db = firebase.database();
         const leaderboardRef = db.ref('leaderboard');
 
-        // Quiz logic
         let poeCount = 0;
         let d4Count = 0;
         let currentQuestion = 1;
@@ -123,19 +121,19 @@
 
         function showResult(){
             showScreen('resultScreen');
-            let score = Math.max(poeCount,d4Count);
-            let resultHtml='';
-            if(poeCount>=4){
-                resultHtml=`<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
-            }else if(d4Count>=4){
-                resultHtml=`<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
-            }else{
-                resultHtml=`<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
+            let score = Math.max(poeCount, d4Count);
+            let resultHtml = '';
+            if(poeCount >= 4){
+                resultHtml = `<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
+            } else if(d4Count >= 4){
+                resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
+            } else {
+                resultHtml = `<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
             }
-            resultHtml+=`<p>Your max streak: ${score}/7 🏆</p>`;
-            document.getElementById('result').innerHTML=resultHtml;
+            resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
+            document.getElementById('result').innerHTML = resultHtml;
 
-            // Zapis do Firebase
+            // Zapis wyniku
             leaderboardRef.push({
                 name: playerName,
                 score: Number(score),
@@ -144,25 +142,28 @@
         }
 
         function showLeaderboard(){
-            document.getElementById('leaderboard').innerHTML='Loading global leaderboard...';
-            leaderboardRef.orderByChild('score').limitToLast(10).once('value').then(snapshot => {
+            document.getElementById('leaderboard').innerHTML = 'Loading global leaderboard...';
+            showScreen('leaderboardScreen');
+
+            leaderboardRef.once('value').then(snapshot => {
                 const entries = [];
-                snapshot.forEach(child => entries.push(child.val()));
-                entries.reverse(); // Od najwyższego score
+                snapshot.forEach(child => {
+                    entries.push(child.val());
+                });
+                entries.sort((a, b) => b.score - a.score || b.date.localeCompare(a.date));
                 let html = '<div id="leaderboardList">';
-                if(entries.length === 0){
+                if (entries.length === 0) {
                     html += '<p>No scores yet! Be the first! 🏆</p>';
                 } else {
-                    entries.forEach((entry,i) => {
+                    entries.slice(0, 10).forEach((entry, i) => {
                         html += `<div class="leaderboard-entry"><span>#${i+1} ${entry.name}</span><span>${entry.score}/7 (${entry.date})</span></div>`;
                     });
                 }
                 html += '</div>';
                 document.getElementById('leaderboard').innerHTML = html;
             }).catch(error => {
-                document.getElementById('leaderboard').innerHTML = 'Error: ' + error.message;
+                document.getElementById('leaderboard').innerHTML = 'Error loading leaderboard: ' + error.message;
             });
-            showScreen('leaderboardScreen');
         }
 
         function showScreen(id){
