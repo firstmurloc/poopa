@@ -22,21 +22,6 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDgIx_FrwwP_rcxpJUyUgJbqqo5i0aCYc",
-            authDomain: "poopa-f9cd1.firebaseapp.com",
-            databaseURL: "https://poopa-f9cd1-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "poopa-f9cd1",
-            storageBucket: "poopa-f9cd1.appspot.com",
-            messagingSenderId: "411396684974",
-            appId: "1:411396684974:web:f65a3e9cba7aea6ae4413f",
-            measurementId: "G-6W2134PN4C"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const leaderboardRef = db.ref('leaderboard');
-    </script>
 </head>
 <body>
     <!-- Start Screen -->
@@ -75,10 +60,22 @@
         <button onclick="showStart()">Back to Menu</button>
     </div>
 
-    <!-- Podłączamy zewnętrzny plik z leaderboardem -->
-    <script src="leaderboard.js"></script>
-
     <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgIx_FrwwP_rcxpJUyUgJbqqo5i0aCYc",
+            authDomain: "poopa-f9cd1.firebaseapp.com",
+            databaseURL: "https://poopa-f9cd1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "poopa-f9cd1",
+            storageBucket: "poopa-f9cd1.appspot.com",
+            messagingSenderId: "411396684974",
+            appId: "1:411396684974:web:f65a3e9cba7aea6ae4413f",
+            measurementId: "G-6W2134PN4C"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const leaderboardRef = db.ref('leaderboard');
+
         // Quiz logic
         let poeCount = 0;
         let d4Count = 0;
@@ -138,17 +135,43 @@
             resultHtml+=`<p>Your max streak: ${score}/7 🏆</p>`;
             document.getElementById('result').innerHTML=resultHtml;
 
-            // Zapis wyniku przez leaderboard.js
-            addPlayerScore(playerName, score);
+            // Zapis do Firebase
+            leaderboardRef.push({
+                name: playerName,
+                score: Number(score),
+                date: new Date().toLocaleDateString()
+            });
+        }
+
+        function showLeaderboard(){
+            document.getElementById('leaderboard').innerHTML='Loading global leaderboard...';
+            leaderboardRef.orderByChild('score').limitToLast(10).once('value', snapshot => {
+                const entries = [];
+                snapshot.forEach(child => entries.push(child.val()));
+                entries.reverse(); // Od najwyższego
+                let html = '<div id="leaderboardList">';
+                if(entries.length === 0){
+                    html += '<p>No scores yet! Be the first! 🏆</p>';
+                } else {
+                    entries.forEach((entry,i) => {
+                        html += `<div class="leaderboard-entry"><span>#${i+1} ${entry.name}</span><span>${entry.score}/7 (${entry.date})</span></div>`;
+                    });
+                }
+                html += '</div>';
+                document.getElementById('leaderboard').innerHTML = html;
+            }).catch(error => {
+                document.getElementById('leaderboard').innerHTML = 'Error loading leaderboard: ' + error.message;
+            });
+            showScreen('leaderboardScreen');
         }
 
         function showScreen(id){
-            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
         function showStart(){
-            document.getElementById('playerName').value='';
+            document.getElementById('playerName').value = '';
             showScreen('startScreen');
         }
 
