@@ -1,33 +1,35 @@
-const db = firebase.database();
-const leaderboardRef = db.ref('leaderboard');
+// leaderboard.js
+const leaderboardRef = firebase.database().ref('leaderboard');
 
-// Dodaje wynik gracza
-function addPlayerScore(name, score){
+function addPlayerScore(name, score) {
   leaderboardRef.push({
     name: name,
-    score: Number(score), // upewniamy się, że score jest liczbą
+    score: Number(score),
     date: new Date().toLocaleDateString()
   });
 }
 
-// Wyświetla leaderboard w kolejności malejącej score
 function showLeaderboard(){
-  document.getElementById('leaderboard').innerHTML='Loading global leaderboard...';
+  document.getElementById('leaderboard').innerHTML='Loading leaderboard...';
 
-  // Pobieramy wszystkie rekordy i nasłuchujemy zmiany w czasie rzeczywistym
-  leaderboardRef.on('value', snapshot => {
-    const htmlEntries = [];
-    snapshot.forEach(child => htmlEntries.push(child.val()));
+  leaderboardRef.once('value').then(snapshot => {
+    const entries = [];
+    snapshot.forEach(child => {
+      const val = child.val();
+      entries.push({key: child.key, name: val.name, score: Number(val.score), date: val.date});
+    });
 
-    // Sortowanie od najwyższego wyniku
-    htmlEntries.sort((a, b) => b.score - a.score);
+    // Sortujemy malejąco po score, przy remisie po key (stabilizacja)
+    entries.sort((a,b) => {
+      if(b.score !== a.score) return b.score - a.score;
+      return a.key.localeCompare(b.key);
+    });
 
-    // Budujemy HTML
     let html = '<div id="leaderboardList">';
-    if (htmlEntries.length === 0) {
+    if(entries.length === 0){
       html += '<p>No scores yet! Be the first! 🏆</p>';
     } else {
-      htmlEntries.forEach((entry, i) => {
+      entries.forEach((entry,i) => {
         html += `<div class="leaderboard-entry">
                    <span>#${i+1} ${entry.name}</span>
                    <span>${entry.score}/7 (${entry.date})</span>
