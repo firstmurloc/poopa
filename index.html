@@ -5,10 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ARPG Quiz: PoE2 vs Diablo 4</title>
     <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(to right, #228B22, #8B0000); color: white; text-align: center; padding: 20px; margin: 0; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(to right, #228B22, #8B0000); 
+            color: white; 
+            text-align: center; 
+            padding: 20px; 
+            margin: 0; 
+        }
         h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
         input[type="text"] { padding: 15px; font-size: 1.2em; border: none; border-radius: 10px; width: 300px; margin: 10px; }
-        button { background: #FFD700; color: black; border: none; padding: 15px 30px; margin: 10px; font-size: 1.2em; border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+        button { 
+            background: #FFD700; 
+            color: black; 
+            border: none; 
+            padding: 15px 30px; 
+            margin: 10px; 
+            font-size: 1.2em; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
         button:hover { background: #FFA500; transform: scale(1.05); }
         #result { font-size: 3em; margin-top: 50px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); }
         .question { font-size: 1.5em; margin: 30px 0; }
@@ -18,12 +35,31 @@
         .screen { display: none; }
         .screen.active { display: block; }
         #progress { font-size: 1.2em; margin: 20px 0; }
+        
+        /* Styl dla nagrody */
+        .reward-link {
+            margin-top: 40px;
+            font-size: 1.4em;
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            display: inline-block;
+        }
+        .reward-link a {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .reward-link a:hover {
+            color: #ff4444;
+        }
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
     <!-- Start Screen -->
     <div id="startScreen" class="screen active">
         <h1>🔥 ARPG QUIZ: PoE2 vs D4 Battle 🔥</h1>
@@ -49,6 +85,9 @@
     <!-- Result Screen -->
     <div id="resultScreen" class="screen">
         <div id="result"></div>
+        <!-- Miejsce na nagrodę - będzie wstawiane dynamicznie -->
+        <div id="rewardContainer"></div>
+        
         <button onclick="showStart()">Play Again</button>
         <button onclick="showLeaderboard()">Leaderboard 🏆</button>
     </div>
@@ -116,57 +155,54 @@
         function choose(choice){
             if(choice==='poe') poeCount++; else d4Count++;
             currentQuestion++;
-            if(currentQuestion<=7) nextQuestion(); else showResult();
+            if(currentQuestion<=7) nextQuestion();
+            else showResult();
         }
 
-     function showResult(){
-    showScreen('resultScreen');
-    let score = Math.max(poeCount, d4Count);
-    let resultHtml = '';
+        function showResult(){
+            showScreen('resultScreen');
+            let score = Math.max(poeCount, d4Count);
+            let resultHtml = '';
 
-    if(poeCount >= 4){
-        resultHtml = `<h1>POE2BAD 😂💀</h1>
-        <p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!
-        <br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
-    } else if(d4Count >= 4){
-        resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1>
-        <p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!
-        <br>Diablo 4 is total trash! Share it! 💀</p>`;
-    } else {
-        resultHtml = `<h1>Tie? 😈</h1>
-        <p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.
-        <br>Try to be more consistent!</p>`;
-    }
+            if(poeCount >= 4){
+                resultHtml = `<h1>POE2BAD 😂💀</h1>
+                <p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>
+                Path of Exile 2 is total trash! Share it! 🔥</p>`;
+            } else if(d4Count >= 4){
+                resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1>
+                <p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>
+                Diablo 4 is total trash! Share it! 💀</p>`;
+            } else {
+                resultHtml = `<h1>Tie? 😈</h1>
+                <p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>
+                Try to be more consistent!</p>`;
+            }
 
-    resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
+            resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
 
-    // 🔥 REWARD LINK – TWORZONY DOPIERO TERAZ
-    resultHtml += `
-    <div style="margin-top:30px;">
-        <a href="https://www.youtube.com/watch?v=Emzq8MznjQQ"
-           target="_blank"
-           style="font-size:20px; color:#FFD700; text-decoration:none;">
-           🎉 Kliknij po nagrodę
-        </a>
-    </div>
-`;
+            document.getElementById('result').innerHTML = resultHtml;
 
+            // Dodajemy link z nagrodą - zawsze, ale dopiero tutaj
+            const rewardHtml = `
+                <div class="reward-link">
+                    <a href="https://www.youtube.com/watch?v=Emzq8MznjQQ" target="_blank">
+                        🎉 Kliknij po specjalną nagrodę 🎉
+                    </a>
+                </div>
+            `;
+            document.getElementById('rewardContainer').innerHTML = rewardHtml;
 
-    document.getElementById('result').innerHTML = resultHtml;
-
-    // zapis do leaderboard
-    leaderboardRef.push({
-        name: playerName,
-        score: Number(score),
-        date: new Date().toLocaleDateString()
-    });
-}
-
+            // zapis do leaderboard
+            leaderboardRef.push({
+                name: playerName,
+                score: Number(score),
+                date: new Date().toLocaleDateString()
+            });
+        }
 
         function showLeaderboard(){
             document.getElementById('leaderboard').innerHTML = 'Loading global leaderboard...';
             showScreen('leaderboardScreen');
-
             leaderboardRef.once('value').then(snapshot => {
                 const entries = [];
                 snapshot.forEach(child => {
@@ -196,6 +232,8 @@
         function showStart(){
             document.getElementById('playerName').value = '';
             showScreen('startScreen');
+            // Czyścimy nagrodę przy powrocie na start
+            document.getElementById('rewardContainer').innerHTML = '';
         }
 
         initButtons();
