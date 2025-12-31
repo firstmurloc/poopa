@@ -119,27 +119,47 @@
             if(currentQuestion<=7) nextQuestion(); else showResult();
         }
 
-        function showResult(){
-            showScreen('resultScreen');
-            let score = Math.max(poeCount, d4Count);
-            let resultHtml = '';
-            if(poeCount >= 4){
-                resultHtml = `<h1>POE2BAD 😂💀</h1><p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!<br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
-            } else if(d4Count >= 4){
-                resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1><p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!<br>Diablo 4 is total trash! Share it! 💀</p>`;
-            } else {
-                resultHtml = `<h1>Tie? 😈</h1><p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.<br>Try to be more consistent!</p>`;
-            }
-            resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
-            document.getElementById('result').innerHTML = resultHtml;
+       function showResult(){
+    showScreen('resultScreen');
+    let score = Math.max(poeCount, d4Count);
+    let resultHtml = '';
 
-            // Zapis wyniku
-            leaderboardRef.push({
-                name: playerName,
-                score: Number(score),
-                date: new Date().toLocaleDateString()
-            });
-        }
+    if(poeCount >= 4){
+        resultHtml = `<h1>POE2BAD 😂💀</h1>
+        <p><strong>${playerName}</strong>, your score: ${poeCount}/7 for PoE2!
+        <br>Path of Exile 2 is total trash! Share it! 🔥</p>`;
+    } else if(d4Count >= 4){
+        resultHtml = `<h1>D4 BAD D4 DOGSHIT 😂🔥</h1>
+        <p><strong>${playerName}</strong>, your score: ${d4Count}/7 for D4!
+        <br>Diablo 4 is total trash! Share it! 💀</p>`;
+    } else {
+        resultHtml = `<h1>Tie? 😈</h1>
+        <p><strong>${playerName}</strong>, mixed feelings: ${poeCount} PoE2 vs ${d4Count} D4.
+        <br>Try to be more consistent!</p>`;
+    }
+
+    resultHtml += `<p>Your max streak: ${score}/7 🏆</p>`;
+
+    // 🔥 REWARD LINK – TWORZONY DOPIERO TERAZ
+    resultHtml += `
+        <div style="margin-top:30px;">
+            <a href="https://www.youtube.com/watch?v=Emzq8MznjQQ"
+               target="_blank"
+               style="font-size:20px; color:#FFD700; text-decoration:none;">
+               🎉 Kliknij po nagrodę
+            </a>
+        </div>
+    `;
+
+    document.getElementById('result').innerHTML = resultHtml;
+
+    // zapis do leaderboard
+    leaderboardRef.push({
+        name: playerName,
+        score: Number(score),
+        date: new Date().toLocaleDateString()
+    });
+}
 
         function showLeaderboard(){
             document.getElementById('leaderboard').innerHTML = 'Loading global leaderboard...';
@@ -178,10 +198,5 @@
 
         initButtons();
     </script>
-    <div style="text-align:center; margin-top:20px;">
-  <a href="https://www.youtube.com/watch?v=Emzq8MznjQQ" target="_blank" style="font-size:18px;">
-    🎉 Your Reward Link!
-  </a>
-</div>
 </body>
 </html>
